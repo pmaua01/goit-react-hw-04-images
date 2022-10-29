@@ -1,38 +1,35 @@
-import React, { Component } from 'react';
+import React from 'react';
 import css from '../Modal/Modal.module.css';
+import { useEffect } from 'react';
 
-export class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.keyDown);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.keyDown);
-  }
-
-  keyDown = e => {
+export const Modal = ({ bigImg, onClose }) => {
+  const keyDown = e => {
     if (e.code === 'Escape') {
-      this.props.onClose();
+      onClose();
     }
   };
 
-  backdropClick = e => {
+  useEffect(() => {
+    window.addEventListener('keydown', keyDown);
+
+    return () => window.removeEventListener('keydown', keyDown);
+  }, []);
+
+  const backdropClick = e => {
     // console.log('t', e.target);
     // console.log('ct', e.currentTarget);
     if (e.currentTarget === e.target) {
-      this.props.onClose();
+      onClose();
     }
   };
 
-  render() {
-    return (
-      <div className={css.Overlay} onClick={this.backdropClick}>
-        <div className={css.Modal}>
-          <img className={css.ImgStyle} src={this.props.bigImg} alt="" />
-        </div>
+  return (
+    <div className={css.Overlay} onClick={backdropClick}>
+      <div className={css.Modal}>
+        <img className={css.ImgStyle} src={bigImg} alt="" />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 //   console.log(bigImg);

@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -8,118 +8,80 @@ import { Modal } from './Modal/Modal';
 import { Spinner } from './Spinner/Spinner';
 import { api } from './helpers/Api';
 
-export class App extends Component {
-  state = {
-    formSearchQuery: '',
-    answerApi: [],
-    error: null,
-    page: 1,
-    answerLength: 0,
-    openModal: false,
-    bigImgUrl: '',
-    load: false,
-    total: '',
-  };
-  async componentDidUpdate(prevProps, prevState) {
-    try {
-      if (
-        (prevState.formSearchQuery !== this.state.formSearchQuery &&
-          this.state.formSearchQuery !== '') ||
-        prevState.page !== this.state.page
-      ) {
-        this.setState({ load: true });
+export const App = () => {
+  const [formSearchQuery, setFormSearchQuery] = useState('');
+  const [answerApi, setAnswerApi] = useState([]);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
-        const response = await api(this.state.formSearchQuery, this.state.page);
+  const [openModal, setOpenModal] = useState(false);
+  const [bigImgUrl, setBigImgUrl] = useState('');
+  const [load, setLoad] = useState(false);
+  const [total, setTotal] = useState('');
 
-        this.setState(prevState => ({
-          answerApi: [...prevState.answerApi, ...response.hits],
-          answerLength: response.hits.length,
-          total: response.totalHits,
-          load: false,
-        }));
-      }
-    } catch (error) {
-      if (prevState.formSearchQuery !== this.state.formSearchQuery) {
-        console.log(error.message);
-        this.setState({ error: error.message });
+  useEffect(() => {
+    if (formSearchQuery === '') {
+      return;
+    }
+    setLoad(true);
+    async function fetchData() {
+      try {
+        setLoad(true);
+        const response = await api(formSearchQuery, page);
+        setAnswerApi(s => [...s, ...response.hits]);
+
+        setTotal(response.totalHits);
+        setLoad(false);
+      } catch (error) {
+        setError(error.message);
       }
     }
-  }
 
-  onClickLoadMore = () => {
-    this.setState({ load: true });
+    fetchData();
+  }, [formSearchQuery, page]);
 
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const onClickLoadMore = () => {
+    setLoad(true);
+    setPage(s => s + 1);
   };
 
-  incrementPage = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const toggleModal = () => {
+    setOpenModal(s => !s);
   };
 
-  resetPage = () => {
-    this.setState({ page: 1 }, () => {});
+  const onCloseModal = () => {
+    setOpenModal(false);
   };
 
-  toggleModal = () => {
-    this.setState(({ openModal }) => ({
-      openModal: !openModal,
-    }));
+  const onChangeSearchQuery = data => {
+    setFormSearchQuery(data);
+    setPage(1);
+    setAnswerApi([]);
   };
 
-  onCloseModal = () => {
-    this.setState({
-      openModal: false,
-    });
+  const onItemClick = url => {
+    toggleModal();
+    setBigImgUrl(url);
   };
 
-  onChangeSearchQuery = data => {
-    this.setState({ formSearchQuery: data, page: 1, answerApi: [] });
-  };
+  const totalPage = total / 12;
 
-  loadMore = () => {
-    this.onClickLoadMore();
-  };
-
-  onItemClick = url => {
-    this.toggleModal();
-    this.setState({ bigImgUrl: url });
-  };
-
-  stopLoader = () => {
-    this.setState({ load: false });
-  };
-
-  render() {
-    const { total, page, load, openModal, answerApi, bigImgUrl, error } =
-      this.state;
-
-    let totalPage = total / 12;
-
-    return (
-      <div>
-        <Searchbar onChangeSearchQuery={this.onChangeSearchQuery}></Searchbar>
-        {total === 0 && <div>sorry no results found</div>}
-        {answerApi.length !== 0 && (
-          <ImageGallery>
-            {load && <Spinner></Spinner>}
-            <ImageGalleryItem
-              answerFromApi={answerApi}
-              onItemClick={this.onItemClick}
-            ></ImageGalleryItem>
-          </ImageGallery>
-        )}
-        {page < totalPage && !load && (
-          <Button onClick={this.onClickLoadMore}></Button>
-        )}
-        {openModal && (
-          <Modal bigImg={bigImgUrl} onClose={this.onCloseModal}></Modal>
-        )}
-        {error && <div>Oops something went wrong</div>}
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Searchbar onChangeSearchQuery={onChangeSearchQuery}></Searchbar>
+      {total === 0 && <div>sorry no results found</div>}
+      {answerApi.length !== 0 && (
+        <ImageGallery>
+          {load && <Spinner></Spinner>}
+          <ImageGalleryItem
+            answerFromApi={answerApi}
+            onItemClick={onItemClick}
+          ></ImageGalleryItem>
+        </ImageGallery>
+      )}
+      {page < totalPage && !load && <Button onClick={onClickLoadMore}></Button>}
+      {openModal && <Modal bigImg={bigImgUrl} onClose={onCloseModal}></Modal>}
+      {error && <div>Oops something went wrong</div>}
+    </div>
+  );
+};
