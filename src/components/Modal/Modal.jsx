@@ -13,7 +13,7 @@ export const Modal = ({ bigImg, onClose }) => {
     window.addEventListener('keydown', keyDown);
 
     return () => window.removeEventListener('keydown', keyDown);
-  }, []);
+  });
 
   const backdropClick = e => {
     // console.log('t', e.target);
