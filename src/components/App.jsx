@@ -20,12 +20,14 @@ export const App = () => {
   const [total, setTotal] = useState('');
 
   useEffect(() => {
-    if (formSearchQuery === '') {
-      return;
-    }
+    console.log('FormSearcQuery', formSearchQuery);
+
     setLoad(true);
     async function fetchData() {
       try {
+        if (formSearchQuery === '') {
+          return;
+        }
         setLoad(true);
         const response = await api(formSearchQuery, page);
         setAnswerApi(s => [...s, ...response.hits]);
