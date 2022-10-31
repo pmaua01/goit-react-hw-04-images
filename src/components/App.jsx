@@ -53,6 +53,7 @@ export const App = () => {
 
   const onCloseModal = () => {
     setOpenModal(false);
+    setBigImgUrl('');
   };
 
   const onChangeSearchQuery = data => {
